@@ -1,0 +1,23 @@
+{
+  "name": "share-through-module",
+  "version": "2.1.0",
+  "description": "a complete self-serve partner development package for the header tag wrapper",
+  "main": "share-through-htb.js",
+  "scripts": {
+    "test": "jasmine"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:indexexchange/share-through-adapter.git"
+  },
+  "author": "Index Exchange",
+  "license": "UNLICENSED",
+  "devDependencies": {
+  },
+  "dependencies": {
+    "jasmine": "^2.6.0",
+    "chai": "^4.0.2",
+    "proxyquire": "^1.8.0",
+    "schema-inspector": "^1.6.8"
+  }
+}
