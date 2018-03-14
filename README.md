@@ -234,6 +234,7 @@ This section involves setting up the general partner configuration such as name,
     * <u>om</u> - This key signals the open market bid in cpm.
     * <u>pm</u> - This key signals the private market bid in cpm.
     * <u>pmid</u> - This key signals the private market deal id.
+* <u>bidUnitInCents</u> - This tells the wrapper the unit of the bid price returned by your endpoint. The unit is in terms of cents, thus it should be set to 100 if your endpoint returns dollars, 1 if your endpoint returns cents, 0.1 if your endpoint returns tenth of a cent, etc. Note that this value must be an integer power of 10.
 
 The last three properties are critical for the wrapper to understand how to interact with the endpoint:
 * callbackType:
@@ -260,9 +261,6 @@ The last three properties are critical for the wrapper to understand how to inte
     * <u>Partner.RequestTypes.JSONP</u> -
         Use only JSONP for bid requests.
 
-Please also fill out the `bidTransformerConfigs` according to your module's bid response cpm format.
-Refer to the below [BidRoundingTransformer](#bidRounding) section for details on how the bidTransformer works. It is <b>crucial</b> that you fill this out correctly and output your bid in <b><u>CENTS</u></b>, otherwise all of your cpm values will be incorrectly formated (i.e. passing dollars instead of cents).
-
 ### Step 2: Generate Request URL (`share-through-htb.js`)
 This step is for crafting a bid request url given a specific set of parcels.
 
@@ -278,7 +276,7 @@ Using this array of parcels, the adapter must craft a request object that will b
 The final returned object should looks something like this:
 ```javascript
 {
-    url: 'http://bidserver.com/api/bids' // base request url for a GET/POST request
+    url: 'http://bidserver.com/api/bids' // base request url for a GET request
     data: { // query string object that will be attached to the base url
         slots: [
             {
@@ -295,6 +293,35 @@ The final returned object should looks something like this:
         site: 'http://google.com'
     },
     callbackId: '_23sd2ij4i1' //unique id used for pairing requests and responses
+}
+```
+
+If your endpoint uses POST please add the following `networkParamOverrides` object to your return object:
+```javascript
+{
+    url: 'http://bidserver.com/api/bids' // base request url for a POST request
+    data: { // will be the payload in the POST request
+        slots: [
+            {
+                placementId: 54321,
+                sizes: [[300, 250]]
+            },{
+                placementId: 12345,
+                sizes: [[300, 600]]
+            },{
+                placementId: 654321,
+                sizes: [[728, 90]]
+            }
+        ],
+        site: 'http://google.com'
+    },
+    callbackId: '_23sd2ij4i1' //unique id used for pairing requests and responses,
+
+    /* Signals a POST request and the content type */
+    networkParamOverrides: {
+        method: 'POST',
+        contentType: 'text/plain'
+    }
 }
 ```
 
@@ -323,9 +350,10 @@ Also please fill out each of the variables for each bid, these will be attached 
 * bidPrice - The bid price for the given slot
 * bidWidth - The width of the given slot
 * bidHeight - The height of the given slot
-* bidCreative - The creative/adm for the given slot that will be rendered if is the winner.
+* bidCreative - The creative/adm for the given slot that will be rendered if is the winner. Needs to be decoded and ready for a doc.write.
 * bidDealId - The dealId if applicable for this slot.
 * bidIsPass - True/false value for if the module returned a pass for this slot.
+* pixelUrl - If you require firing a tracking pixel after your creative wins and your tracking pixel is not part of the original adm that is rendered, please provide the decoded url of the tracking pixel here. This `pixelUrl` variable will then be passed to the `__renderPixel` function, which will then be called by either your module's specific `render` function or a generic rendering function depending on the line item setup.
 
 After filling out these objects, the resulting returnParcel objects should look something like this:
 
@@ -355,13 +383,9 @@ After filling out these objects, the resulting returnParcel objects should look 
 }
 ```
 
-### Step 5: Rendering (`share-through-htb.js`)
-This step is for rendering the winning creative. If the partner module's line item wins, the creative code will be returned and inserted into the iframe for that googletag slot. The standard creative code will contain a call to the partner module's specific `render` function.
-
-The adm passed into this function will be the same bidCreative that was earlier attached to a given parcel object.
-They are matched via the id targeting key.
-
-The included `render` function should work as is for most partners, as it simply involves a call to document.write to write the creative to the iframe in which it was passed into by dfp.
+### Step 5: Rendering Pixel (`share-through-htb.js`)
+This step is only required if your adapter needs to fire a tracking pixel after your creative renders. The function `__renderPixel` will be called right after we render your winning creative.
+It will be called with the paramter `pixelUrl` that needs to be filled out in `__parseResponse`.
 
 ### Step 6: Exports (`share-through-htb-exports.js`)
 In this step, you will be required to fill out the exports file for your module. This file will contain all of the functions that will need to be exposed to outside page if they need to be accessed outside of the wrapper. In the usual case, all you will need to change in this file is your partner module's name in the included snippet:
@@ -448,32 +472,15 @@ There are a lot of helper objects available to you in you partner module.
 * `getDeviceType()` - Returns the device type.
 
 ### <a name='bidRounding'></a> BidRoundingTransformer
-* `transformBid(rawBid)` - Transform rawBid into the configured format. This includes, rounding/flooring according to the bidTransformConfig that was used to instantiate the library. The bidTransformConfig is an object of the format:
+* `apply(rawBid)` - Transform rawBid into the configured format. This includes, rounding/flooring according to the configuration that was used to instantiate the library. The bidTransformConfig is an object of the format:
     * `floor` - Minimum acceptable bid price.
-    * `inputCentsMultiplier` - Multiply input bids by this to get cents.
+    * `inputCentsMultiplier` - Multiply input bids by this to get cents. This is identical to bidUnitInCents in `__profile`.
     * `outputCentsDivisor` -  Divide output bids in cents by this.
     * `outputPrecision` - Decimal places in output.
     * `roundingType` - Should always be 1.
     * `buckets` - Buckets specifying rounding steps.
 
-Example of `bidTransformConfig`:
-
-```javascript
-var bidTransformConfig = {          // Default rounding configuration
-    'floor': 0,
-    'inputCentsMultiplier': 100,    // Input is in dollars
-    'outputCentsDivisor': 100,      // Output as dollars
-    'outputPrecision': 2,           // With 2 decimal places
-    'roundingType': 1,              // Floor instead of round
-    'buckets': [{
-        'max': 2000,                // Up to 20 dollar (above 5 cents)
-        'step': 5                   // use 5 cent increments
-    }, {
-        'max': 5000,                // Up to 50 dollars (above 20 dollars)
-        'step': 100                 // use 1 dollar increments
-    }]
-};
-```
+Note that bid transformer instances suitable for dfp targeting and price reporting are already provided via `__baseClass._bidTransformers`. It is recommanded to use the provided instances as they are sufficient for almost all use cases.
 
 # <a name='testing'></a> Testing
 

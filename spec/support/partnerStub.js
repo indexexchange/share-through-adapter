@@ -13,12 +13,29 @@ function Partner(profile, configs, requiredResources, fns) {
         };
     })();
 
+    function _emitStatsEvent(sessionId, statsEventName, slotCollectionObject) {
+        return 1;
+    }
+
     /* =====================================
      * Public Interface
      * ---------------------------------- */
 
     return {
-        _configs: _configs
+        _configs: _configs,
+        _emitStatsEvent: _emitStatsEvent,
+        _bidTransformers: {
+            targeting: {
+                apply: function (price) {
+                    return price;
+                }
+            },
+            price: {
+                apply: function (price) {
+                    return price;
+                }
+            }
+        }
     };
 }
 
