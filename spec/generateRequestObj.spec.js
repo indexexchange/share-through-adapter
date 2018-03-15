@@ -160,12 +160,18 @@ describe('generateRequestObj', function () {
                 * passed into the function.
                 */
 
-            /* ---------- ADD MORE TEST CASES TO TEST AGAINST REAL VALUES ------------*/
             it('should correctly build a url', function () {
-                /* Write unit tests to verify that your bid request url contains the correct
-                    * request params, url, etc.
-                    */
                 expect(requestObject).to.exist;
+                expect(requestObject.url).to.eq('https://btlr.sharethrough.com/header-bid/v1');
+            });
+
+            it('should correctly build query params object', function () {
+                expect(requestObject).to.exist;
+                expect(requestObject.data.placement_key).to.eq('abc123');
+                expect(requestObject.data.bidId).to.exist;
+                expect(requestObject.data.hbSource).to.eq('indexExchange');
+                expect(requestObject.data.hbVersion).to.eq('2.1.1');
+                expect(requestObject.data.cbust).to.exist;
             });
             /* -----------------------------------------------------------------------*/
         }
