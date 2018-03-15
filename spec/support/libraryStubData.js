@@ -8,7 +8,7 @@ var mock = new MockBrowser();
 var libraryStubData = {
     'browser.js': {
         getProtocol: function () {
-            return 'http:';
+            return 'https:';
         },
         getReferrer: function () {
             return 'localhost';
@@ -122,7 +122,7 @@ var libraryStubData = {
         documentWrite: function (doc, adm) {
             return adm;
         },
-        now: function () {
+        now: function() {
             return (new Date()).getTime();
         }
     },

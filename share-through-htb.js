@@ -83,7 +83,7 @@ function ShareThroughHtb(configs) {
      */
     function __generateRequestObj(returnParcels) {
 
-        var baseUrl = Browser.getProtocol() + 'btlr.sharethrough.com/header-bid/v1';
+        var baseUrl = Browser.getProtocol() + '//btlr.sharethrough.com/header-bid/v1';
 
         var queryObj = {
           placement_key: returnParcels[0].xSlotRef.placementKey,
