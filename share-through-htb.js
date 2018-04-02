@@ -173,7 +173,20 @@ function ShareThroughHtb(configs) {
         var bidDealId = null;
         var pixelUrl = '';
 
+        /* explicitly pass */
+        var bidIsPass = bidPrice <= 0 ? true : false;
         /* ---------------------------------------------------------------------------------------*/
+
+        if (bidIsPass) {
+            //? if (DEBUG) {
+            Scribe.info(__profile.partnerId + ' returned pass for { id: ' + adResponse.id + ' }.');
+            //? }
+            if (__profile.enabledAnalytics.requestTime) {
+                __baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
+            }
+            curReturnParcel.pass = true;
+            return;
+        }
 
         if (__profile.enabledAnalytics.requestTime) {
             __baseClass._emitStatsEvent(sessionId, 'hs_slot_bid', headerStatsInfo);
