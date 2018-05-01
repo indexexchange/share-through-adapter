@@ -141,10 +141,6 @@ describe('generateRequestObj', function () {
                         },
                         data: {
                             type: 'object'
-                        },
-                        callbackId: {
-                            type: 'string',
-                            minLength: 1
                         }
                     }
                 }, requestObject);

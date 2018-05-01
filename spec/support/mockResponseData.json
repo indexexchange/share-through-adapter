@@ -1,5 +1,25 @@
 {
-    "bid": [],
-    "pass": [],
+    "bid": [
+      {
+        "adserverRequestId": "some-adserver-request-id",
+        "creatives": [
+          {
+            "auctionWinId": "some-auction-win-id",
+            "cpm": "5.29",
+            "creative": {
+              "advertiser": "Advertiser",
+              "title": "Title for ad",
+              "description": "Description for ad"
+            }
+          }
+        ]
+      }
+    ],
+    "pass": [
+      {
+        "adserverRequestId": "some-adserver-request-id",
+        "creatives": []
+      }
+    ],
     "deals": []
 }

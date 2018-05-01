@@ -195,41 +195,6 @@ describe('parseResponse', function () {
                 expect(returnParcels[i].size).to.deep.equal([1,1]);
                 expect(returnParcels[i].targetingType).to.equal('slot');
                 expect(returnParcels[i].adm).to.exist
-
-                var result = inspector.validate({
-                    type: 'object',
-                    properties: {
-                        pass: {
-                            type: 'boolean',
-                            eq: true,
-
-                        }
-                    }
-                }, returnParcels[i]);
-
-                expect(result.valid, result.format()).to.be.true;
-            }
-        });
-
-        /* ---------- ADD MORE TEST CASES TO TEST AGAINST REAL VALUES ------------*/
-        it('each parcel should have the correct values set', function () {
-
-            /* IF SRA, parse all parcels at once */
-            if (partnerProfile.architecture) partnerModule.parseResponse(1, mockData, returnParcels);
-
-            for (var i = 0; i < returnParcels.length; i++) {
-
-                /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
-
-                /* Add test cases to test against each of the parcel's set fields
-                 * to make sure the response was parsed correctly.
-                 *
-                 * The parcels have already been parsed and should contain all the
-                 * necessary demand.
-                 */
-
-                expect(returnParcels[i]).to.exist;
             }
         });
 
@@ -261,7 +226,7 @@ describe('parseResponse', function () {
         /* -----------------------------------------------------------------------*/
     });
 
-    describe('should correctly parse deals: ', function () {
+    describe('should correctly parse passes: ', function () {
 
         beforeEach(function () {
             /* spy on RenderService.registerAd function, so that we can test it is called */
@@ -335,48 +300,5 @@ describe('parseResponse', function () {
             }
         });
         /* -----------------------------------------------------------------------*/
-    });
-
-    describe('should correctly parse dealid when no price was sent back: ', function () {
-
-        beforeEach(function () {
-            /* spy on RenderService.registerAd function, so that we can test it is called */
-            registerAd = sinon.spy(libraryStubData["space-camp.js"].services.RenderService, 'registerAd');
-            returnParcels = generateReturnParcels(partnerModule.profile, partnerConfig);
-
-            /* Get mock response data from our responseData file */
-            responseData = JSON.parse(fs.readFileSync(path.join(__dirname, './support/mockResponseData.json')));
-            mockData = responseData.dealid;
-        });
-
-        afterEach(function () {
-            registerAd.restore();
-        });
-
-        it('registerAd should be called with correct adEntry', function () {
-            var i, expectedAdEntry = [];
-
-            /* IF SRA, parse all parcels at once */
-            if (partnerProfile.architecture === 1 || partnerProfile.architecture === 2) {
-                expectedAdEntry = getExpectedAdEntry(mockData);
-
-                partnerModule.parseResponse(1, mockData, returnParcels);
-
-                for (var i = 0; i < expectedAdEntry.length; i++){
-                    expect(registerAd).to.have.been.calledWith(sinon.match(expectedAdEntry[i]));
-                }
-            } else if (partnerProfile.architecture === 0) {
-                /* IF MRA, parse one parcel at a time */
-                for (var i = 0; i < mockData.length; i++) {
-                    expectedAdEntry[i] = getExpectedAdEntry(mockData[i]);
-
-                    partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
-
-                    for (var j = 0; j < expectedAdEntry[i].length; j++) {
-                        expect(registerAd).to.have.been.calledWith(sinon.match(expectedAdEntry[i][j]));
-                    }
-                }
-            }
-        });
     });
 });

@@ -82,7 +82,6 @@ function ShareThroughHtb(configs) {
      * @return {object}
      */
     function __generateRequestObj(returnParcels) {
-
         var baseUrl = Browser.getProtocol() + '//btlr.sharethrough.com/header-bid/v1';
 
         var queryObj = {
@@ -93,22 +92,9 @@ function ShareThroughHtb(configs) {
           cbust: System.now()
         };
 
-        /* ---------------------- PUT CODE HERE ------------------------------------ */
-        var queryObj = {};
-        var callbackId = System.generateUniqueId();
-
-        /* Change this to your bidder endpoint.*/
-        var baseUrl = Browser.getProtocol() + '//someAdapterEndpoint.com/bid';
-
-        /* ---------------- Craft bid request using the above returnParcels --------- */
-
-
-        /* -------------------------------------------------------------------------- */
-
         return {
             url: baseUrl,
             data: queryObj,
-            callbackId: callbackId
         };
     }
 
@@ -131,6 +117,44 @@ function ShareThroughHtb(configs) {
                 url: decodeURIComponent(pixelUrl),
                 method: 'GET',
             });
+        }
+    }
+
+    function __generateAdm(bid, placementKey) {
+        var stxResponseName = "str_response_" + bid.bidId;
+        var encodedBid = __b64EncodeUnicode(JSON.stringify(bid));
+
+        return "<div data-str-native-key='" + placementKey + "' data-stx-response-name='" + stxResponseName + "'></div>" +
+        "<script>var " + stxResponseName + " = " + encodedBid + " </script>" +
+        "<script src='//native.sharethrough.com/assets/sfp-set-targeting.js'></script>" +
+        "<script type='text/javascript'>" +
+        "(function() {" +
+            "var sfp_js = document.createElement('script');" +
+            "sfp_js.src = '//native.sharethrough.com/assets/sfp.js';" +
+            "sfp_js.type = 'text/javascript';" +
+            "sfp_js.charset = 'utf-8';" +
+            "try {" +
+                "if (!(window.top.STR && window.top.STR.Tag)) {" +
+                    "window.top.document.getElementsByTagName('body')[0].appendChild(sfp_js);" +
+                "}" +
+            "} catch (e) {" +
+              "console.log(e);" +
+            "}" +
+         "})();" +
+        "</script>";
+    }
+
+    // See https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_Unicode_Problem
+    function __b64EncodeUnicode(str) {
+        try {
+            return btoa(
+                encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                    function toSolidBytes(match, p1) {
+                        return String.fromCharCode('0x' + p1);
+                    })
+            );
+        } catch (e) {
+            return str;
         }
     }
 
@@ -167,6 +191,7 @@ function ShareThroughHtb(configs) {
 
         /* ---------- Fill the bid variables with data from the bid response here. ------------*/
 
+        // Already checked if creatives array is present
         var bidPrice = curBid.creatives[0].cpm;
         var bidSize = [1, 1];
         var bidCreative = __generateAdm(curBid, curReturnParcel.xSlotRef.placementKey);
@@ -218,11 +243,22 @@ function ShareThroughHtb(configs) {
         }
         //? }
 
-            curReturnParcel.size = bidSize;
-            curReturnParcel.targetingType = 'slot';
-            curReturnParcel.targeting = {};
+        //? if (FEATURES.RETURN_PRICE) {
+        curReturnParcel.price = Number(__baseClass._bidTransformers.price.apply(bidPrice));
+        //? }
 
-            var targetingCpm = '';
+        var pubKitAdId = RenderService.registerAd({
+            sessionId: sessionId,
+            partnerId: __profile.partnerId,
+            adm: bidCreative,
+            requestId: curReturnParcel.requestId,
+            size: curReturnParcel.size,
+            price: targetingCpm,
+            dealId: bidDealId || undefined,
+            timeOfExpiry: __profile.features.demandExpiry.enabled ? (__profile.features.demandExpiry.value + System.now()) : 0,
+            auxFn: __renderPixel,
+            auxArgs: [pixelUrl]
+        });
 
         //? if (FEATURES.INTERNAL_RENDER) {
         curReturnParcel.targeting.pubKitAdId = pubKitAdId;
@@ -272,9 +308,9 @@ function ShareThroughHtb(configs) {
             },
             bidUnitInCents: 100, // The bid price unit (in cents) the endpoint returns, please refer to the readme for details
             lineItemType: Constants.LineItemTypes.ID_AND_SIZE,
-            callbackType: Partner.CallbackTypes.ID, // Callback type, please refer to the readme for details
-            architecture: Partner.Architectures.SRA, // Request architecture, please refer to the readme for details
-            requestType: Partner.RequestTypes.ANY // Request type, jsonp, ajax, or any.
+            callbackType: Partner.CallbackTypes.NONE, // Callback type, please refer to the readme for details
+            architecture: Partner.Architectures.MRA, // Request architecture, please refer to the readme for details
+            requestType: Partner.RequestTypes.AJAX // Request type, jsonp, ajax, or any.
         };
         /* ---------------------------------------------------------------------------------------*/
 
@@ -289,6 +325,7 @@ function ShareThroughHtb(configs) {
         __baseClass = Partner(__profile, configs, null, {
             parseResponse: __parseResponse,
             generateRequestObj: __generateRequestObj,
+            b64EncodeUnicode: __b64EncodeUnicode
         });
     })();
 
