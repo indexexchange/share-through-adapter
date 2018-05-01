@@ -282,28 +282,20 @@ describe('parseResponse', function () {
             }
         });
 
-        it('registerAd should be called with correct adEntry', function () {
-            var i, expectedAdEntry = [];
+        it('registerAd should not be called', function () {
+            var i, expectedAdEntry = {};
 
             /* IF SRA, parse all parcels at once */
             if (partnerProfile.architecture === 1 || partnerProfile.architecture === 2) {
-                expectedAdEntry = getExpectedAdEntry(mockData);
-
                 partnerModule.parseResponse(1, mockData, returnParcels);
 
-                for (var i = 0; i < expectedAdEntry.length; i++){
-                    expect(registerAd).to.have.been.calledWith(sinon.match(expectedAdEntry[i]));
-                }
+                expect(registerAd).to.not.have.been.called;
             } else if (partnerProfile.architecture === 0) {
                 /* IF MRA, parse one parcel at a time */
-                for (var i = 0; i < mockData.length; i++) {
-                    expectedAdEntry[i] = getExpectedAdEntry(mockData[i]);
-
+                for (i = 0; i < returnParcels.length; i++) {
                     partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
 
-                    for (var j = 0; j < expectedAdEntry[i].length; j++) {
-                        expect(registerAd).to.have.been.calledWith(sinon.match(expectedAdEntry[i][j]));
-                    }
+                    expect(registerAd).to.not.have.been.called;
                 }
             }
         });
