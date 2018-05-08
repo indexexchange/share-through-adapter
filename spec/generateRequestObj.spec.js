@@ -168,6 +168,8 @@ describe('generateRequestObj', function () {
                 expect(requestObject.data.hbSource).to.eq('indexExchange');
                 expect(requestObject.data.hbVersion).to.eq('2.1.1');
                 expect(requestObject.data.cbust).to.exist;
+                expect(requestObject.data.consent_required).to.eq(true)
+                expect(requestObject.data.consent_string).to.eq('BOQ7WlgOQ7WlgABABwAAABJOACgACAAQABA')
             });
             /* -----------------------------------------------------------------------*/
         }

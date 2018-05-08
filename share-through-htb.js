@@ -25,6 +25,7 @@ var SpaceCamp = require('space-camp.js');
 var System = require('system.js');
 var Network = require('network.js');
 var Utilities = require('utilities.js');
+var ComplianceService;
 var EventsService;
 var RenderService;
 
@@ -91,6 +92,13 @@ function ShareThroughHtb(configs) {
           hbVersion: '2.1.1',
           cbust: System.now()
         };
+
+        var privacyEnabled = ComplianceService.isPrivacyEnabled();
+        var gdprStatus = ComplianceService.gdpr.getConsent();
+        if (privacyEnabled && gdprStatus) {
+          queryObj.consent_required = gdprStatus.applies;
+          queryObj.consent_string = gdprStatus.consentString;
+        }
 
         return {
             url: baseUrl,
@@ -270,6 +278,7 @@ function ShareThroughHtb(configs) {
      * ---------------------------------- */
 
     (function __constructor() {
+        ComplianceService = SpaceCamp.services.ComplianceService;
         EventsService = SpaceCamp.services.EventsService;
         RenderService = SpaceCamp.services.RenderService;
 
