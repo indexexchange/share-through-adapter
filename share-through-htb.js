@@ -191,7 +191,7 @@ function ShareThroughHtb(configs) {
         /* No response or no creatives returned so its a pass */
         if (!curBid || !curBid.creatives || curBid.creatives.length === 0) {
             if (__profile.enabledAnalytics.requestTime) {
-                __baseClass._emitStatsEvent(sessionId, 'hs_slot_bid', headerStatsInfo);
+                __baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
             }
             curReturnParcel.pass = true;
             return;
