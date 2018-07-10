@@ -132,7 +132,7 @@ function ShareThroughHtb(configs) {
         var stxResponseName = "str_response_" + bid.bidId;
         var encodedBid = __b64EncodeUnicode(JSON.stringify(bid));
 
-        return "<div data-str-native-key='" + placementKey + "' data-stx-response-name='" + stxResponseName + "'></div>" +
+        return "<div data-str-native-key='" + placementKey + "' data-stx-response-name='" + stxResponseName + "' data-str-replace-iframe-container='true'></div>" +
         "<script>var " + stxResponseName + " = '" + encodedBid + "' </script>" +
         "<script src='//native.sharethrough.com/assets/sfp-set-targeting.js'></script>" +
         "<script type='text/javascript'>" +
